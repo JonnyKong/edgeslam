@@ -2321,12 +2321,17 @@ void Tracking::tcp_receive(moodycamel::ConcurrentQueue<std::string>* messageQueu
 
 // Edge-SLAM: added destructor to destroy all connections on object termination
 Tracking::~Tracking(){
-    keyframe_socket->~TcpSocket();
-    frame_socket->~TcpSocket();
+    keyframe_socket->setAlive(false);
+    frame_socket->setAlive(false);
     map_socket->~TcpSocket();
+
     // This is just a dummy enqueue to unblock the wait_dequeue function in tcp_send()
     keyframe_queue.enqueue("exit");
     frame_queue.enqueue("exit");
+
+    keyframe_thread->join();
+    frame_thread->join();
+    map_thread->join();
 }
 
 } //namespace ORB_SLAM
